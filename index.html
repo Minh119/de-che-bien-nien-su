@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e1724" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 30 16 16 30 2 16Z' fill='%23d6a632'/><path d='M16 8 24 16 16 24 8 16Z' fill='%23fff2c4'/></svg>" />
+    <title>Đế Chế — Biên Niên Sử</title>
+    <script type="module" crossorigin src="./assets/index-DNOHVyug.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/CanvasPool-ADgchDYy.js">
+    <link rel="modulepreload" crossorigin href="./assets/canvasUtils-XYxewFj2.js">
+    <link rel="modulepreload" crossorigin href="./assets/RenderTargetSystem-7gK5U27P.js">
+    <link rel="modulepreload" crossorigin href="./assets/getTextureBatchBindGroup-B7fcsu1p.js">
+    <link rel="modulepreload" crossorigin href="./assets/getTexelRangeRects-DzI32RVX.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-TtIupjsG.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <div class="vignette"></div>
+
+    <div id="hud" class="hidden">
+      <header class="topbar panel">
+        <div class="brand">
+          <span class="crest">✦</span>
+          <div>
+            <div class="title">ĐẾ CHẾ</div>
+            <div class="subtitle">Biên niên sử</div>
+          </div>
+        </div>
+        <div class="date" id="date">Năm 1 · Mùa Xuân</div>
+        <div class="speed" id="speed"></div>
+        <div class="stats">
+          <span title="Seed của thế giới">🌱 <b id="seedLabel"></b></span>
+          <span title="Tick mô phỏng">⏱ <b id="tick">0</b></span>
+          <span title="Khung hình/giây"><b id="fps">0</b> FPS</span>
+        </div>
+      </header>
+
+      <aside class="panel factions">
+        <h3>Các thế lực</h3>
+        <ul id="factionList"></ul>
+      </aside>
+
+      <div class="panel selection hidden" id="selection"></div>
+
+      <div class="panel tileinfo" id="tileinfo">Rê chuột lên bản đồ để xem thông tin ô</div>
+
+      <div class="panel tools">
+        <button id="btnSound" title="Âm thanh & người kể chuyện (phím M: tắt/bật tiếng)">🔊</button>
+        <button id="btnDirector" title="Camera đạo diễn tự động (phím C)">🎥<span class="lbl"> Đạo diễn</span></button>
+        <button id="btnRecord" title="Quay video WebM (phím R; I/O đặt điểm vào/ra)">⏺<span class="lbl"> Quay</span></button>
+        <button id="btnClean" title="Ẩn giao diện (phím H)">🎬<span class="lbl"> Ẩn UI</span></button>
+        <button id="btnExport" title="Xuất file replay (seed + cấu hình)">💾</button>
+        <button id="btnImport" title="Mở file replay">📂</button>
+        <button id="btnNew" title="Tạo thế giới mới">🗺</button>
+        <button id="btnCheck" title="Chạy lại mô phỏng từ seed và so sánh hash">🧪</button>
+        <input type="file" id="replayFile" accept=".json,application/json" hidden />
+      </div>
+
+      <div id="soundPanel" class="panel sound-panel hidden">
+        <h3>Âm thanh &amp; lời kể</h3>
+        <label class="check"><input type="checkbox" id="optSound" /> Bật âm thanh</label>
+        <label class="slider"><span>Hiệu ứng</span><input type="range" id="volSfx" min="0" max="100" /></label>
+        <label class="slider"><span>Âm thanh nền</span><input type="range" id="volAmb" min="0" max="100" /></label>
+        <label class="slider"><span>Nhạc nền</span><input type="range" id="volMusic" min="0" max="100" /></label>
+        <hr />
+        <label class="check"><input type="checkbox" id="optVoice" /> Người kể chuyện (giọng đọc)</label>
+        <select id="voiceSelect"></select>
+        <p id="voiceNote" class="note hidden">
+          Máy chưa có giọng đọc tiếng Việt nên chỉ hiện phụ đề. Cài thêm trên Windows: Cài đặt → Thời gian &amp; Ngôn ngữ → Giọng nói →
+          Thêm giọng nói → Tiếng Việt (hoặc dùng trình duyệt Edge khi có mạng).
+        </p>
+        <label class="slider"><span>Giọng đọc</span><input type="range" id="volVoice" min="0" max="100" /></label>
+        <label class="check"><input type="checkbox" id="optSubs" /> Phụ đề lời kể</label>
+      </div>
+
+      <aside class="panel chronicle">
+        <h3>Biên niên sử</h3>
+        <ul id="chronicleLog"></ul>
+      </aside>
+
+      <div id="timeline" class="panel timeline hidden">
+        <div class="tl-label">Năm 1</div>
+        <div class="tl-track">
+          <div class="tl-fill"></div>
+          <div class="tl-markers"></div>
+          <div class="tl-in" title="Điểm vào (I)"></div>
+          <div class="tl-out" title="Điểm ra (O)"></div>
+          <div class="tl-head"></div>
+        </div>
+      </div>
+
+      <div class="panel minimap-wrap">
+        <canvas id="minimap"></canvas>
+      </div>
+
+      <div class="help">
+        Kéo / WASD: di chuyển · Cuộn / Q E: zoom · Bấm: chọn · F: theo dõi · C: đạo diễn · Space: dừng · 1–7: tốc độ · H: ẩn UI · M: tắt tiếng · R: quay · I/O: điểm vào/ra
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <button id="btnShowUi" class="show-ui" title="Hiện giao diện">👁</button>
+    <div id="recIndicator" class="rec-indicator">⏺ REC</div>
+
+    <div id="recordDialog" class="overlay hidden">
+      <div class="card">
+        <h2>Quay video</h2>
+        <label>
+          <span>Khung hình</span>
+          <select id="recAspect">
+            <option value="16:9">16:9 — 1920×1080 (YouTube)</option>
+            <option value="9:16">9:16 — 1080×1920 (TikTok / Shorts)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="recClean" checked /> Ẩn giao diện (chỉ giữ cảnh)</label>
+        <label class="check"><input type="checkbox" id="recChronicle" checked /> Hiện banner biên niên sử trong video</label>
+        <label class="check"><input type="checkbox" id="recDirector" checked /> Bật camera đạo diễn tự động</label>
+        <p class="note" id="recRange"></p>
+        <div class="row">
+          <button type="button" id="recCancel">Hủy</button>
+          <button type="button" class="primary" id="recStart">⏺ Bắt đầu quay</button>
+        </div>
+        <p class="note">Bấm R hoặc nút ⏺ lần nữa để dừng. File WebM tự tải về.</p>
+      </div>
+    </div>
+
+    <div id="endScreen" class="overlay hidden">
+      <div class="card end-card">
+        <div class="end-crest">👑</div>
+        <h2 class="end-title"></h2>
+        <p class="end-sub"></p>
+        <canvas class="end-chart"></canvas>
+        <table class="end-table">
+          <thead>
+            <tr><th>Thế lực</th><th></th><th>Hạ gục</th><th>Tổn thất</th><th>Chiếm thành</th><th>Lãnh thổ lớn nhất</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="row">
+          <button type="button" id="btnEndClose">Xem tiếp / xem lại</button>
+          <button type="button" class="primary" id="btnEndNew">Thế giới mới</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="start" class="overlay">
+      <form class="card" id="startForm">
+        <div class="card-crest">✦</div>
+        <h1>ĐẾ CHẾ</h1>
+        <p class="tagline">Từ đống lửa trại đến ngai vàng thống nhất thiên hạ</p>
+
+        <label>
+          <span>Seed thế giới</span>
+          <div class="row">
+            <input id="seedInput" autocomplete="off" spellcheck="false" />
+            <button type="button" id="btnDice" title="Seed ngẫu nhiên">🎲</button>
+          </div>
+        </label>
+
+        <div class="row two">
+          <label>
+            <span>Số thế lực</span>
+            <select id="factionInput">
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5" selected>5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+          <label>
+            <span>Kích thước bản đồ</span>
+            <select id="sizeInput">
+              <option value="128">Nhỏ (128)</option>
+              <option value="160" selected>Vừa (160)</option>
+              <option value="192">Lớn (192)</option>
+              <option value="224">Rất lớn (224)</option>
+            </select>
+          </label>
+        </div>
+
+        <button type="submit" class="primary">Khai sinh thế giới</button>
+        <p class="note">Cùng một seed luôn tạo ra cùng một thế giới và cùng một diễn biến.</p>
+      </form>
+    </div>
+
+    <div id="loading" class="overlay hidden">
+      <div class="loading-text">Đang kiến tạo thế giới…</div>
+    </div>
+
+  </body>
+</html>
